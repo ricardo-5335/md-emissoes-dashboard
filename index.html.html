@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — MD Intermediações</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#11182b;
+      --primary:#4f46e5;
+      --accent:#22c55e;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --text-strong:#ffffff;
+      --border:#1f2a44;
+      --chip:#0f172a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:"Poppins",sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1b2550 0%, transparent 60%),
+                  radial-gradient(900px 600px at 100% 0%, #0f2740 0%, transparent 60%),
+                  var(--bg);
+      color:var(--text); line-height:1.4;
+    }
+    .container{max-width:1200px; margin:0 auto; padding:24px}
+    header{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:16px}
+    .logo{width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--primary),#7c3aed); display:flex; align-items:center; justify-content:center; font-weight:700}
+    h1{margin:0; font-size:clamp(20px,4vw,28px); color:var(--text-strong)}
+    .subtitle{margin-top:4px; font-weight:400; color:var(--muted)}
+
+    .toolbar{display:grid; gap:12px; background:rgba(17,24,43,0.7); padding:12px; border:1px solid var(--border); border-radius:14px; backdrop-filter:blur(4px)}
+    .row{display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+    label{font-size:12px; color:var(--muted)}
+    input[type="file"], select, input[type="date"], .btn{background:#0b1222; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px}
+    select{min-width:160px}
+    .btn{cursor:pointer; transition:.2s}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#7c3aed); border:none}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin-top:16px}
+    .card{grid-column:span 4; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px}
+    .card h3{margin:0; font-weight:600; font-size:13px; color:var(--muted)}
+    .kpi{margin-top:6px; font-size:28px; font-weight:700}
+
+   /* table */
+.tablewrap {
+  margin-top: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+th, td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+th {
+  position: sticky;
+  top: 0;
+  background: #0c1326;
+  color: #cbd5e1;
+}
+tr:hover { background: #0b1222; }
+
+/* estilos visuais para Status */
+.status-emitido {
+  background-color: #dcfce7;
+  color: #166534;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.status-diferente {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">MD</div>
+      <div>
+        <h1>Dashboard — Emissões (MD Intermediações)</h1>
+        <div class="subtitle">Acompanhamento financeiro e operacional</div>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="row">
+        <label>Carregar planilha (.xlsx)</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+        <button class="btn primary" id="loadBtn">Carregar Planilha</button>
+      </div>
+      <div class="row">
+        <label>Status:</label>
+        <select id="status"><option value="">Todos</option><option value="Emitido">Emitido</option><option value="Valor de milha diferente">Valor de milha diferente</option></select>
+        <label>Programa:</label>
+        <select id="programa"><option value="">Todos</option><option value="latam">LATAM</option><option value="smiles">SMILES</option><option value="azul">AZUL</option></select>
+        <label>Semana:</label>
+        <select id="semana"><option value="">Todas</option></select>
+        <label>Emissor:</label>
+        <select id="emissor"><option value="">Todos</option></select>
+        <label>Período:</label>
+        <input type="date" id="dtIni" /> <input type="date" id="dtFim" />
+        <button class="btn" id="clearFilters">Limpar filtros</button>
+      </div>
+    </div>
+
+    <div class="grid" id="kpis">
+      <div class="card" title="Soma do valor global das emissões (milhas + taxas + bagagem)"><h3>Custo (Emissor)</h3><div class="kpi" id="kpiCusto">R$ —</div></div>
+      <div class="card" title="Soma total do Spread (R$) das emissões filtradas"><h3>Lucro</h3><div class="kpi" id="kpiLucro">R$ —</div></div>
+      <div class="card" title="Média do Spread relativo por emissão: Spread ÷ Valor total das milhas"><h3>Spread médio</h3><div class="kpi" id="kpiSpread">— %</div></div>
+    </div>
+
+    <div class="tablewrap"><table id="tblBase"><thead><tr>
+      <th>Status</th><th>Data</th><th>Emissor</th><th>Programa</th><th>Qnt CPFs</th><th>Qnt milhas orig.</th><th>Qnt milhas comp.</th><th>Milheiro (R$)</th><th>Valor total milhas (R$)</th><th>Taxa embarque (R$)</th><th>Bagagem (R$)</th><th>Valor global (R$)</th><th>Spread (R$)</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+  const BR = Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+  const BRnum = new Intl.NumberFormat('pt-BR');
+  const fmtMoney=v=>isFinite(v)?BR.format(v):'—';
+  const fmtNum=v=>isFinite(v)?BRnum.format(v):'—';
+  const parseBRMoney=s=>{if(!s)return null;if(typeof s==='number')return s;s=s.replace(/\./g,'').replace(',','.');const v=parseFloat(s);return isNaN(v)?null:v};
+  const parseIntSafe=s=>{if(!s)return null;if(typeof s==='number')return s;const v=parseInt(s.replace(/\D/g,''));return isNaN(v)?null:v};
+  const parseDateBR=s=>{if(!s)return null;if(typeof s==='number'){const d=XLSX.SSF.parse_date_code(s);return new Date(d.y,d.m-1,d.d)}const [d,m,y]=s.split(/[\\/\\\\]/).map(Number);return new Date(y,m-1,d)};
+  
+  const state={rows:[],filtros:{status:'',programa:'',semana:'',emissor:'',dtIni:null,dtFim:null}};
+
+  const selStatus=document.getElementById('status');
+  const selPrograma=document.getElementById('programa');
+  const selEmissor=document.getElementById('emissor');
+  const dtIni=document.getElementById('dtIni');
+  const dtFim=document.getElementById('dtFim');
+
+  [selStatus,selPrograma,selEmissor].forEach(sel=>{
+    sel.addEventListener('change',()=>{ 
+      state.filtros.status=selStatus.value;
+      state.filtros.programa=selPrograma.value;
+      state.filtros.emissor=selEmissor.value;
+      render();
+    });
+  });
+  [dtIni,dtFim].forEach(inp=>inp.addEventListener('change',()=>{
+    state.filtros.dtIni=dtIni.value||null;
+    state.filtros.dtFim=dtFim.value||null;
+    render();
+  }));
+
+  document.getElementById('clearFilters').addEventListener('click',()=>{
+    document.querySelectorAll('select').forEach(s=>s.value='');
+    dtIni.value='';dtFim.value='';
+    state.filtros={status:'',programa:'',semana:'',emissor:'',dtIni:null,dtFim:null};
+    render();
+  });
+
+  document.getElementById('loadBtn').addEventListener('click',async()=>{
+    const f=document.getElementById('fileInput').files?.[0];
+    if(!f){alert('Selecione um arquivo');return}
+    const data=await f.arrayBuffer();
+    const wb=XLSX.read(data,{type:'array'});
+    const lista=wb.Sheets['Lista completa'];
+    if(!lista){alert('Aba \"Lista completa\" não encontrada');return}
+    const jl=XLSX.utils.sheet_to_json(lista,{defval:null});
+    state.rows=jl.filter(r=>r.Status && String(r.Status).trim()!=='').map(r=>{
+      const Status=String(r.Status).trim();
+      const Data=parseDateBR(r.Data);
+      const Emissor=String(r.Emissor||'').trim();
+      const Programa=String(r.Programa||'').toLowerCase().trim();
+      const QntCPFs=parseIntSafe(r['Qnt CPFs']);
+      const QntMilhasOrig=parseIntSafe(r['Qnt milhas original']);
+      const QntMilhasComp=parseIntSafe(r['Qnt milhas compradas']);
+      const Milheiro=parseBRMoney(r['Valor do milheiro comprado']);
+      const ValorTotalMilhas=parseBRMoney(r['Valor total das milhas']);
+      const Taxa=parseBRMoney(r['Taxa de embarque']);
+      const Bagagem=parseBRMoney(r.Bagagem);
+      const ValorGlobal=parseBRMoney(r['Valor global']);
+      const Spread=parseBRMoney(r.Spread);
+      return{Status,Data,Emissor,Programa,QntCPFs,QntMilhasOrig,QntMilhasComp,Milheiro,ValorTotalMilhas,Taxa,Bagagem,ValorGlobal,Spread};
+    });
+    render();
+  });
+
+  function applyFilters(rows){
+    let out=rows.slice();
+    const f=state.filtros;
+    if(f.status) out=out.filter(r=>r.Status.toLowerCase()===f.status.toLowerCase());
+    if(f.programa) out=out.filter(r=>r.Programa===f.programa);
+    if(f.emissor) out=out.filter(r=>r.Emissor===f.emissor);
+    if(f.dtIni){const d0=new Date(f.dtIni);out=out.filter(r=>r.Data && r.Data>=d0);}
+    if(f.dtFim){const d1=new Date(f.dtFim);out=out.filter(r=>r.Data && r.Data<=d1);}
+    return out;
+  }
+
+  function render(){
+    const rows=applyFilters(state.rows);
+    const custo=rows.reduce((s,r)=>s+(r.ValorGlobal||0),0);
+    const lucro=rows.reduce((s,r)=>s+(r.Spread||0),0);
+    const percBase=rows.filter(r=>r.Spread&&r.ValorTotalMilhas);
+    const spreadPctAvg=percBase.length?(percBase.reduce((s,r)=>s+(r.Spread/r.ValorTotalMilhas),0)/percBase.length)*100:null;
+    document.getElementById('kpiCusto').textContent=fmtMoney(custo);
+    document.getElementById('kpiLucro').textContent=fmtMoney(lucro);
+    document.getElementById('kpiSpread').textContent=spreadPctAvg?spreadPctAvg.toFixed(1)+'%':'— %';
+
+    const tbody=document.querySelector('#tblBase tbody');
+    tbody.innerHTML=rows.map(r=>{
+      const statusClass=r.Status==='Emitido'?'status-emitido':(r.Status==='Valor de milha diferente'?'status-diferente':'');
+      const statusCell=`<span class=\"${statusClass}\">${r.Status}</span>`;
+      return `<tr>
+        <td>${statusCell}</td>
+        <td>${r.Data? r.Data.toLocaleDateString('pt-BR'):''}</td>
+        <td>${r.Emissor}</td>
+        <td>${r.Programa}</td>
+        <td>${fmtNum(r.QntCPFs)}</td>
+        <td>${fmtNum(r.QntMilhasOrig)}</td>
+        <td>${fmtNum(r.QntMilhasComp)}</td>
+        <td>${fmtMoney(r.Milheiro)}</td>
+        <td>${fmtMoney(r.ValorTotalMilhas)}</td>
+        <td>${fmtMoney(r.Taxa)}</td>
+        <td>${fmtMoney(r.Bagagem)}</td>
+        <td>${fmtMoney(r.ValorGlobal)}</td>
+        <td>${fmtMoney(r.Spread)}</td>
+      </tr>`;
+    }).join('');
+  }
+</script>
+
+</body>
+</html>	
